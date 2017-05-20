@@ -1,0 +1,24 @@
+<p>
+  schedule-form works!
+</p>
+
+
+<div *ngFor="let course of courses; let i = index" class="form-group">
+  <label for="courseName">Course Number(i.e Math135)</label>
+  <input type="text"  class="form-control" id="courseName"
+         [(ngModel)]="course.name" name="courseName" (change)="getCourseInfo">
+  <select *ngIf="course.sections" class="form-control">
+    <option *ngFor="let sec of course.sections" [value]="course.sections">{{course.sections}}</option>
+  </select>
+  <input type="checkbox" name="enrolled">Already Enrolled
+  <button (click)="remove(i)">Remove</button>
+</div>
+
+<button class="btn" (click)="addCourse()">Add a course</button>
+<input type="checkbox" name="showOpenOnly">Show Open Class Only
+<button type="submit" class="btn btn-success">Submit</button>
+
+
+<div *ngIf="debug">
+{{courses | json}}
+</div>

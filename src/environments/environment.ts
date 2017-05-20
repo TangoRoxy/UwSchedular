@@ -5,4 +5,6 @@
 
 export const environment = {
   production: false
+
+  courseInfoUrl: "localhost:80";
 };
