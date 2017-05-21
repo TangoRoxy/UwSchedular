@@ -32,43 +32,43 @@ export class ScheduleFormComponent implements OnInit {
     if (this.checkIfValid(s)){
       this.cs.getInfo(s).subscribe(r=>{
         console.log(r);
-
-        if (r.length > 0){
-          let index = -1;
-          for(let i= 0; i < this.courses.length; i++){
-
-            if (this.cleanFormat(this.courses[i].name) == r[0].name){
-              index = i;
-            }
-          }
-          console.log(index);
-          if (index == -1){
-            return;
-          }
-          this.courses[index].title = r[0].title;
-          for (let c of r){
-            if (c.type == "LEC"){
-              this.courses[index].section = c.classes;
-            } else{
-              if (this.courses[index].related){
-                this.courses[index].related.push({
-                  name: r[0].name + '-' + c.type,
-                  section: c.classes
-                });
-              }
-              this.courses[index].related = [{
-                name: r[0].name + '-' + c.type,
-                section: c.classes
-              }];
-            }
-          }
-        }
+        this.processData(r);
+        // if (r.length > 0){
+        //   let index = -1;
+        //   for(let i= 0; i < this.courses.length; i++){
+        //
+        //     if (this.cleanFormat(this.courses[i].name) == r[0].name){
+        //       index = i;
+        //     }
+        //   }
+        //   console.log(index);
+        //   if (index == -1){
+        //     return;
+        //   }
+        //   this.courses[index].title = r[0].title;
+        //   for (let c of r){
+        //     if (c.type == "LEC"){
+        //       this.courses[index].section = c.classes;
+        //     } else{
+        //       if (this.courses[index].related){
+        //         this.courses[index].related.push({
+        //           name: r[0].name + '-' + c.type,
+        //           section: c.classes
+        //         });
+        //       }
+        //       this.courses[index].related = [{
+        //         name: r[0].name + '-' + c.type,
+        //         section: c.classes
+        //       }];
+        //     }
+        //   }
+        // }
 
       });
     }
 
   }
-  processData(r, cache){
+  processData(r){
     // TODO: check if cache already exists?
     if (r.length > 0) {
       let data : any = {title: r[0].title, related: []};
@@ -79,9 +79,14 @@ export class ScheduleFormComponent implements OnInit {
           data.related.push(c.classes);
         }
       }
-      cache[r[0].name] = data;
+      this.cache[r[0].name] = data;
     }
   }
+
+  cacheExist(s){
+    return !!this.cache[this.cleanFormat(s)];
+  }
+
   cleanFormat(s){
     let regex = /[^a-zA-Z0-9]/g;
     return s.replace(regex,"").toUpperCase();
@@ -95,7 +100,7 @@ export class ScheduleFormComponent implements OnInit {
 }
 
 // course-info-cache [upgrade to a lru-cache
-// { name : {title : calculus 3, classes: [{type, section, time.. , instructor, location ... }], related: {type, section ... }
+// { name : {title : calculus 3, classes: [{type, section, time.. , instructor, location ... }], related: [{type, section ... }]
 // }
 
 // separate form and info
@@ -113,9 +118,14 @@ export class ScheduleFormComponent implements OnInit {
 /**
  *  TODO:
  *  1. Change processing return data: store it in the cache; form retrieve it differently
- *  2.
- *
- *
+ *  2. Form Submission
+ *  3. API revamp: support filter
+ *  4. course information presentation
+ *  ---
+ *  5. table presentation
+ *  6. form presentation/ overall presentation
+ *  * : frontend observable caching
+ *  * : interfaces: form, sectionInfo,  cached info
  *  *1: save button: save to cookie
  *  *2: clear all cache/ all entry
  */

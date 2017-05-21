@@ -60,7 +60,11 @@ app.get('/course', function (req,res) {
   if (course && /^[a-zA-Z]{2,4}\/[0-9]{3}/.test(course)) {
     console.log("requesting");
     uwclient.get('/courses/' + course + '/schedule.json', (e, r)=> {
-      d = filterData([r]);
+      let d = [];
+      if (r){
+        d = filterData([r]);
+      }
+
       res.send(d);
     });
   }
@@ -77,7 +81,10 @@ app.get('/do', function (req,res) {
   for (i of data){
     uwclient.get('/courses/'+ i + '/schedule.json', (e,r)=> {
       wait--;
-      response.push(r);
+      if (r){
+        response.push(r);
+      }
+
       if (wait == 0){
         res.send(makeSchedule(response));
         //res.send(filterData(response));
@@ -100,9 +107,11 @@ app.get('/t', function (req,res) {
   //     }
   //   });
   // }
-  let course = "cs/135";
+  let course = req.query.course;
+  course = course ? course : "cs/135";
   uwclient.get('/courses/' + course + '/schedule.json', (e, r)=> {
     res.send(r);
+    console.log(e);
   })
 })  ;
 
