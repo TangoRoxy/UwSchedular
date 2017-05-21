@@ -6,12 +6,23 @@
 <div *ngFor="let course of courses; let i = index" class="form-group">
   <label for="courseName">Course Number(i.e Math135)</label>
   <input type="text"  class="form-control" id="courseName"
-         [(ngModel)]="course.name" name="courseName" (change)="getCourseInfo">
-  <select *ngIf="course.sections" class="form-control">
-    <option *ngFor="let sec of course.sections" [value]="course.sections">{{course.sections}}</option>
+         [(ngModel)]="course.name" name="courseName" (input)="getCourseInfo($event)">
+  <small *ngIf="course.title">{{course.title}}</small>
+  <select *ngIf="course.section" class="form-control">
+    <option *ngFor="let sec of course.section" [value]="sec.section">{{sec.section}}-{{sec?.instructors[0]}}</option>
   </select>
   <input type="checkbox" name="enrolled">Already Enrolled
   <button (click)="remove(i)">Remove</button>
+  <div *ngIf="course.related">
+    <p>Related component of {{course.name}}</p>
+    <div *ngFor="let related of course.related">
+      <p>{{related.name}}</p>
+      <select *ngIf="related.section" class="form-control">
+        <option *ngFor="let sec of related.section" [value]="related.section">{{sec.section}}-{{sec?.instructors[0]}}</option>
+      </select>
+      <input type="checkbox" name="enrolled">Already Enrolled
+    </div>
+  </div>
 </div>
 
 <button class="btn" (click)="addCourse()">Add a course</button>

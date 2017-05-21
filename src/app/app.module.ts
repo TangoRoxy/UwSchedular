@@ -5,6 +5,7 @@ import { HttpModule } from '@angular/http';
 
 import { AppComponent } from './app.component';
 import { ScheduleFormComponent } from './schedule-form/schedule-form.component';
+import {CourseInfoService} from "./course-info.service";
 
 @NgModule({
   declarations: [
@@ -16,7 +17,7 @@ import { ScheduleFormComponent } from './schedule-form/schedule-form.component';
     FormsModule,
     HttpModule
   ],
-  providers: [],
+  providers: [CourseInfoService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

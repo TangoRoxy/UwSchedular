@@ -1,8 +1,13 @@
 import { Injectable } from '@angular/core';
-import { Http, Response }          from '@angular/http';
+import { Http, Response, URLSearchParams}          from '@angular/http';
 import { Observable } from 'rxjs/Observable';
+import { Subject} from 'rxjs/Subject';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/debounceTime';
+import 'rxjs/add/operator/distinctUntilChanged';
+import 'rxjs/add/operator/switchMap';
+import 'rxjs/add/operator/throttletime';
 import {environment} from '../environments/environment';
 
 @Injectable()
@@ -10,13 +15,30 @@ export class CourseInfoService {
 
   constructor(private http: Http) { }
 
-  getCourseInfo() {
-    return this.http.get(environment.courseInfoUrl).map(this.extractData);
+  querySubject = new Subject();
+  // observ = this.querySubject.throttleTime(1000).distinctUntilChanged().switchMap((s)=>this.getCourseInfo(s));
+  observ = this.querySubject.switchMap((s)=>this.getCourseInfo(s));
+  i = 0;
+
+  getCourseInfo(s) {
+    console.log(this.i++);
+    let params: URLSearchParams = new URLSearchParams();
+    params.set("course",s);
+    return this.http.get(environment.courseInfoUrl, {search: params}).map(this.extractData);
   }
+
 
   private extractData(res: Response) {
-    let body = res.json();
-    return body.data || { };
+    return res.json();
   }
 
+  getInfo(s){
+    return this.getCourseInfo(s);
+    // this.querySubject.next(s);
+    // console.log(s);
+    // return this.observ;
+  }
+
+
+  // todo: filtering invalid input
 }

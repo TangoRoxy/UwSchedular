@@ -40,11 +40,34 @@ app.get('/', function (req, res) {
   res.send('Hello World!');
 });
 
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 
 var uwaterlooApi = require('uwaterloo-api');
 var uwclient = new uwaterlooApi({
   API_KEY : 'fbacc92a5473805ed1382f4dbe2e229e'
 });
+
+
+app.get('/course', function (req,res) {
+  // all call waterloo api to get
+  let course = req.query.course;
+  console.log(course);
+  course = course.replace(/([0-9]*)$/, "/$1");
+  if (course && /^[a-zA-Z]{2,4}\/[0-9]{3}/.test(course)) {
+    console.log("requesting");
+    uwclient.get('/courses/' + course + '/schedule.json', (e, r)=> {
+      d = filterData([r]);
+      res.send(d);
+    });
+  }
+});
+
+
+
 
 app.get('/do', function (req,res) {
   // all call waterloo api to get
@@ -65,19 +88,23 @@ app.get('/do', function (req,res) {
 
 app.get('/t', function (req,res) {
   // all call waterloo api to get
-  data= ['STAT/331'];
-  response = [];
-  wait = data.length;
-  for (i of data){
-    uwclient.get('/courses/'+ i + '/schedule.json', (e,r)=> {
-      wait--;
-      response.push(r);
-      if (wait == 0){
-        res.send(makeSchedule(response));//.map(x=> x.map(filterData)));
-      }
-    });
-  }
-});
+  // data= ['STAT/331'];
+  // response = [];
+  // wait = data.length;
+  // for (i of data){
+  //   uwclient.get('/courses/'+ i + '/schedule.json', (e,r)=> {
+  //     wait--;
+  //     response.push(r);
+  //     if (wait == 0){
+  //       res.send(makeSchedule(response));//.map(x=> x.map(filterData)));
+  //     }
+  //   });
+  // }
+  let course = "cs/135";
+  uwclient.get('/courses/' + course + '/schedule.json', (e, r)=> {
+    res.send(r);
+  })
+})  ;
 
 // TODO: filter with weekday, split tutorial out.
 function makeSchedule(data){
@@ -167,6 +194,10 @@ function dayOverlap(a,b){
 //   }
 // }
 
+
+// take an array of response about course schedule;
+// separate tut eliminate tus
+// TODO: handle no data
 function filterData(d){
   data = [];
   for (o of d){
@@ -200,17 +231,21 @@ function filterData(d){
         });
       }
     }
-    data.push({
-      name: o[0].subject + o[0].catalog_number,
-      title: o[0].title,
-      classes: classes
-    });
-    if (tut.length > 0){
+    if (o.length > 0) {
       data.push({
         name: o[0].subject + o[0].catalog_number,
         title: o[0].title,
-        classes: tut
+        type: "LEC",
+        classes: classes
       });
+      if (tut.length > 0) {
+        data.push({
+          name: o[0].subject + o[0].catalog_number,
+          title: o[0].title,
+          type: "TUT",
+          classes: tut
+        });
+      }
     }
   }
   return data;

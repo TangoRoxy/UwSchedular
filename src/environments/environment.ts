@@ -4,7 +4,7 @@
 // The list of which env maps to which file can be found in `.angular-cli.json`.
 
 export const environment = {
-  production: false
+  production: false,
 
-  courseInfoUrl: "localhost:80";
+  courseInfoUrl: "http://localhost:80/course"
 };
