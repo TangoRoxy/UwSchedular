@@ -85,8 +85,8 @@ export class ScheduleFormComponent implements OnInit {
           data.classes = c.classes;
           data.classes.push({section: "any"});
         } else {
-          data.related.push(c.classes);
-          // data.related.push([{section: "any"}].concat(c.classes));
+          let i = data.related.push(c.classes);
+          data.related[i-1].push({section:"any"});
         }
       }
       this.cache[r[0].name] = data;
@@ -112,6 +112,7 @@ export class ScheduleFormComponent implements OnInit {
   }
 
   submit(form){
+    this.courses = this.courses.filter(c=>this.checkIfValid(c.name));
     this.cs.getSchedule(form).subscribe((r)=>{
       if (r){
         console.log(r);
