@@ -12,10 +12,11 @@ export class ScheduleFormComponent implements OnInit {
 
   debug = true;
   courses = [];
+  form = {courses: this.courses, showOpenOnly: true};
   cache = {};
   addCourse(){
     if (this.courses.length < 7){
-      this.courses.push({});
+      this.courses.push({related:[{},{}]});
     }
   }
 
@@ -29,9 +30,15 @@ export class ScheduleFormComponent implements OnInit {
   getCourseInfo($event){
     // console.log($event);
     let s = this.cleanFormat($event.target.value);
+
     if (this.checkIfValid(s)){
       this.cs.getInfo(s).subscribe(r=>{
         console.log(r);
+        for (let c of this.courses){
+          if (this.cleanFormat(c.name) == s){
+            c.name = s;
+          }
+        }
         this.processData(r);
         // if (r.length > 0){
         //   let index = -1;
@@ -74,9 +81,12 @@ export class ScheduleFormComponent implements OnInit {
       let data : any = {title: r[0].title, related: []};
       for (let c of r) {
         if (c.type == "LEC") {
+          // data.classes = [{section: "any"}].concat(c.classes);
           data.classes = c.classes;
+          data.classes.push({section: "any"});
         } else {
           data.related.push(c.classes);
+          // data.related.push([{section: "any"}].concat(c.classes));
         }
       }
       this.cache[r[0].name] = data;
@@ -88,6 +98,9 @@ export class ScheduleFormComponent implements OnInit {
   }
 
   cleanFormat(s){
+    if (!s){
+      return "";
+    }
     let regex = /[^a-zA-Z0-9]/g;
     return s.replace(regex,"").toUpperCase();
   }
@@ -96,6 +109,14 @@ export class ScheduleFormComponent implements OnInit {
     console.log(s);
     let courseFormat = /^[a-zA-Z]{2,4}[0-9]{3}$/;
     return courseFormat.test(s);
+  }
+
+  submit(form){
+    this.cs.getSchedule(form).subscribe((r)=>{
+      if (r){
+        console.log(r);
+      }
+    });
   }
 }
 
@@ -129,3 +150,38 @@ export class ScheduleFormComponent implements OnInit {
  *  *1: save button: save to cookie
  *  *2: clear all cache/ all entry
  */
+
+
+interface courseForm{
+  courses: Array<any>,
+  showOpenOnly?: boolean
+}
+
+interface lecture{
+  name?: string,
+  section?: string,
+  enrolled?: boolean,
+  related?: Array<any>
+}
+
+interface relatedComp{
+  section?: string,
+  enrolled?: string
+}
+
+interface courseInfo{
+  section: string,
+  class_nb: number,
+  canEnrol: number,
+  start_time: string,
+  end_time: string,
+  weekdays: string,
+  location: any, //string,
+  instructors: any
+}
+
+interface cachedCourse{
+  title: string,
+  classes: Array<courseInfo>,
+  related: Array<courseInfo>
+}

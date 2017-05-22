@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Http, Response, URLSearchParams}          from '@angular/http';
+import { Http, Response, URLSearchParams, RequestOptions, Headers}          from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 import { Subject} from 'rxjs/Subject';
 import 'rxjs/add/operator/catch';
@@ -30,6 +30,12 @@ export class CourseInfoService {
 
   private extractData(res: Response) {
     return res.json();
+  }
+
+  getSchedule(form){
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+    let options = new RequestOptions({ headers: headers });
+    return this.http.post(environment.makeScheduleUrl, form, options).map(this.extractData);
   }
 
   getInfo(s){

@@ -6,5 +6,6 @@
 export const environment = {
   production: false,
 
-  courseInfoUrl: "http://localhost:80/course"
+  courseInfoUrl: "http://localhost:80/course",
+  makeScheduleUrl: "http://localhost:80/t"
 };

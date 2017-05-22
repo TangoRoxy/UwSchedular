@@ -31,19 +31,19 @@
   <input type="text"  class="form-control" id="courseName"
          [(ngModel)]="course.name" name="courseName" (input)="getCourseInfo($event)">
   <small *ngIf="cacheExist(course.name)">{{cache[cleanFormat(course.name)].title}}</small>
-  <select *ngIf="cacheExist(course.name)" class="form-control">
-    <option *ngFor="let sec of cache[cleanFormat(course.name)].classes" [value]="sec.section">{{sec.section}}-{{sec?.instructors[0]}}</option>
+  <select *ngIf="cacheExist(course.name)" class="form-control" [(ngModel)]="course.section">
+    <option *ngFor="let sec of cache[cleanFormat(course.name)].classes" [value]="sec.section">{{sec.section}}-{{sec.instructors|json}}</option>
   </select>
-  <input type="checkbox" name="enrolled">Already Enrolled
+  <label *ngIf="course.section && course.section!='any'"><input type="checkbox" name="enrolled" [(ngModel)]="course.enrolled">Already Enrolled</label>
   <button (click)="remove(i)">Remove</button>
   <div *ngIf="cache[cleanFormat(course.name)].related.length > 0">
     <p>Related component of {{course.name}}</p>
-    <div *ngFor="let related of cache[cleanFormat(course.name)].related">
+    <div *ngFor="let related of cache[cleanFormat(course.name)].related; let j = index">
       <p>{{related[0].type}}</p>
-      <select class="form-control">
+      <select class="form-control" [(ngModel)]="course.related[j].section">
         <option *ngFor="let sec of related" [value]="sec.section">{{sec.section}}-{{sec?.instructors[0]}}</option>
       </select>
-      <input type="checkbox" name="enrolled">Already Enrolled
+      <input type="checkbox" name="enrolled" [(ngModel)]="course.related[j].enrolled">Already Enrolled
     </div>
   </div>
 </div>
@@ -51,8 +51,8 @@
 
 
 <button class="btn" (click)="addCourse()">Add a course</button>
-<input type="checkbox" name="showOpenOnly">Show Open Class Only
-<button type="submit" class="btn btn-success">Submit</button>
+<input type="checkbox" name="showOpenOnly" [(ngModel)]="form.showOpenOnly">Show Open Class Only
+<button type="submit" class="btn btn-success" (click)="submit(form)">Submit</button>
 
 
 <div *ngIf="debug">

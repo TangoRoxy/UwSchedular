@@ -15,12 +15,13 @@
 var compression = require('compression');
 var morgan = require('morgan');
 var express = require('express');
+var bodyParser = require('body-parser');
 var app = express();
 
 
 app.use(compression());
 app.use(morgan('common'));
-
+app.use(bodyParser.json());
 
 // params processing, input checking, default input
 // app.use((req,res,next)=>{
@@ -92,6 +93,36 @@ app.get('/do', function (req,res) {
     });
   }
 });
+app.post('/t', function(req,res){
+  //console.log(req.body);
+  request = req.body.courses.map(x=>x.name.replace(/([0-9]*)$/, "/$1"));
+  response = [];
+  wait = request.length;
+  for (i of request){
+    uwclient.get('/courses/'+ i + '/schedule.json', (e,r)=> {
+      wait--;
+      if (r){
+        response.push(r);
+      }
+
+      if (wait == 0){
+        res.send(makeSchedule1(response,req.body));
+        //res.send(filterData(response));
+      }
+    });
+  }
+});
+
+
+function makeSchedule1(r, form){
+  r= processData1(r);
+  r= filterData4(r, form);
+  console.log(r);
+  console.log(form);
+  result=[];
+  addCourse([],0,r,result);
+  return [result,r];
+}
 
 app.get('/t', function (req,res) {
   // all call waterloo api to get
@@ -107,12 +138,13 @@ app.get('/t', function (req,res) {
   //     }
   //   });
   // }
-  let course = req.query.course;
-  course = course ? course : "cs/135";
-  uwclient.get('/courses/' + course + '/schedule.json', (e, r)=> {
-    res.send(r);
-    console.log(e);
-  })
+  console.log(req.query);
+  // let course = req.query.course;
+  // course = course ? course : "cs/135";
+  // uwclient.get('/courses/' + course + '/schedule.json', (e, r)=> {
+  //   res.send(r);
+  //   console.log(e);
+  // })
 })  ;
 
 // TODO: filter with weekday, split tutorial out.
@@ -129,6 +161,170 @@ function makeSchedule(data){
   addCourse([],0, data, results);
   return [data, results];
 }
+
+
+
+// filtered out useless stuff;
+function processData1(r){
+  return r.map(x=>x.data).filter(x=>x.length>0);
+}
+
+function filterData4(r, form){
+  let show = form.showOpenOnly ? form.showOpenOnly : true;
+  result = [];
+  // loop through form;
+  // console.log(r);
+  // console.log(form);
+  for (crit of form.courses){
+
+    // find correct data
+    let info;
+    for (data of r){
+      // console.log("**************************");
+      // console.log(data);
+      // console.log(crit);
+      if (data[0].subject + data[0].catalog_number == crit.name){
+        info = data;
+        break;
+      }
+    }
+    console.log(info);
+    // make shit to push it in result
+    classes = [];
+    tut = [];
+    for (section of info){
+      clas = section.classes[0];
+      if (section.section.includes("LEC")){
+        if ((!crit.section || crit.section == "any" || crit.section == section.section)
+          && (!form.showOpenOnly || crit.enrolled || section.enrollment_capacity - section.enrollment_total > 0)){
+          classes.push({
+            class_nb: section.class_number,
+            section: section.section,
+            canEnrol: section.enrollment_capacity - section.enrollment_total,
+            start_time: clas.date.start_time,
+            end_time :clas.date.end_time,
+            weekdays : clas.date.weekdays,
+            location : clas.location,
+            instructors: clas.instructors[0]
+          });
+
+        }
+      } else if (section.section.includes("TUT")){
+        // get corresponding related info;
+        let r;
+        for (comp of crit.related){
+          // console.log(section.section);
+          // console.log(comp);
+          if (comp.section && comp.section.includes("TUT")){
+            r = comp;
+            break;
+          }
+        }
+        if (!r){
+          r = {section: "any"};
+        }
+        if ((!r.section || r.section == "any" || r.section == section.section)
+          && (!form.showOpenOnly || r.enrolled || section.enrollment_capacity - section.enrollment_total > 0)){
+          tut.push({
+            class_nb: section.class_number,
+            section: section.section,
+            canEnrol: section.enrollment_capacity - section.enrollment_total,
+            start_time: clas.date.start_time,
+            end_time :clas.date.end_time,
+            weekdays : clas.date.weekdays,
+            location : clas.location,
+            instructors: clas.instructors[0]
+          });
+
+        }
+      }
+    }
+    result.push({
+      name: info[0].subject + info[0].catalog_number,
+      title: info[0].title,
+      type: "LEC",
+      classes: classes
+    });
+    if (tut.length > 0) {
+      result.push({
+        name: info[0].subject + info[0].catalog_number,
+        title: info[0].title,
+        type: "TUT",
+        classes: tut
+      });
+    }
+  }
+  return result;
+}
+
+//
+// function filterData3(d, form){
+//   data = [];
+//   for (o of d){
+//     o = o.data;
+//     if (o.length <= 0){
+//       continue;
+//     }
+//     classes = [];
+//     tut = [];
+//     for (i of o){
+//       a = i.classes[0];
+//       if (i.section.includes("LEC")){
+//         // get the entry for the form:
+//         // preprocess form: if section == null or any, enrolled = false;
+//         // take care of online sections. start.time = null
+//         let criteria;
+//         let name = o[0].subject + o[0].catalog_number;
+//         for (c of form.courses){
+//
+//         }
+//         let criteria = form.courses[0];
+//         if ((!criteria.section || criteria.section == "any" || criteria.section == i.section)
+//           && (!form.showOpenOnly || criteria.enrolled || i.enrolled > 0)){
+//           classes.push({
+//             class_nb: i.class_number,
+//             section: i.section,
+//             canEnrol: i.enrollment_capacity - i.enrollment_total,
+//             start_time: a.date.start_time,
+//             end_time :a.date.end_time,
+//             weekdays : a.date.weekdays,
+//             location : a.location,
+//             instructors: a.instructors
+//           });
+//         }
+//       }
+//       if (i.section.includes("TUT")){
+//         tut.push({
+//           class_nb: i.class_number,
+//           section: i.section,
+//           canEnrol: i.enrollment_capacity - i.enrollment_total,
+//           start_time: a.date.start_time,
+//           end_time :a.date.end_time,
+//           weekdays : a.date.weekdays,
+//           location : a.location, //TODO: concate building and classroom
+//           instructors: a.instructors
+//         });
+//       }
+//     }
+//
+//     data.push({
+//       name: o[0].subject + o[0].catalog_number,
+//       title: o[0].title,
+//       type: "LEC",
+//       classes: classes
+//     });
+//     if (tut.length > 0) {
+//       data.push({
+//         name: o[0].subject + o[0].catalog_number,
+//         title: o[0].title,
+//         type: "TUT",
+//         classes: tut
+//       });
+//     }
+//
+//   }
+//   return data;
+// }
 
 function addCourse(cur, index, data, results){
   if (index >= data.length){
@@ -235,7 +431,7 @@ function filterData(d){
           start_time: a.date.start_time,
           end_time :a.date.end_time,
           weekdays : a.date.weekdays,
-          location : a.location,
+          location : a.location, //TODO: concate building and classroom
           instructors: a.instructors
         });
       }
@@ -262,6 +458,9 @@ function filterData(d){
 
 // input "18:30"
 function ifOverlap(a,b){
+  if (!a.start_time || !b.start_time){
+    return false;
+  }
   aS = getMin(a.start_time);
   bS = getMin(b.start_time);
   aE = getMin(a.end_time);
@@ -287,70 +486,6 @@ function filter(data, criteria){
     })
   }
 }
-//
-// // Dump all products
-// app.get('/productAll', function (req, res) {
-//   var connection = sql.createConnection(config);
-//   connection.connect();
-//
-//   connection.query('SELECT * FROM product ORDER BY discount DESC', function(err, rows, fields) {
-//     if (err) throw err;
-//
-//     console.log(rows[0].name);
-//     res.send(rows);
-//   });
-//   connection.end();
-// });
-//
-//
-// // Dump all stores
-// app.get('/storeAll', (req,res) => {
-//     var connection = sql.createConnection(config);
-//     connection.connect();
-//
-//     connection.query('SELECT * FROM store', function(err, rows, fields) {
-//       if (err) throw err;
-//
-//       console.log(rows[0].name);
-//       res.send(rows);
-//     });
-//
-//     connection.end();
-//   }
-// );
-//
-// // Filter product by categories, sort by discount amount
-// app.get('/product', function (req, res) {
-//   var connection = sql.createConnection(config);
-//   connection.connect();
-//
-//
-//   connection.query(`SELECT * FROM product WHERE category="${req.query.category}" ORDER BY discount DESC`, function(err, rows, fields) {
-//     if (err) throw err;
-//
-//     console.log(rows[0].name);
-//     res.send(rows[0]);
-//   });
-//   connection.end();
-// });
-//
-//
-// app.get('/store', function (req, res) {
-//   var connection = sql.createConnection(config);
-//   connection.connect();
-//
-//   connection.query(`SELECT * FROM store WHERE category="${req.query.category}"`, function(err, rows, fields) {
-//     if (err) throw err;
-//
-//     console.log(rows[0].name);
-//     res.send(rows[0]);
-//   });
-//   connection.end();
-// });
-
-// sort by approximity
-
-// and get store as well
 
 
 
