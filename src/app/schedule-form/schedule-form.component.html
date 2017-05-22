@@ -30,15 +30,15 @@
   <label for="courseName">Course Number</label>
   <input type="text"  class="form-control" id="courseName"
          [(ngModel)]="course.name" name="courseName" (input)="getCourseInfo($event)">
-  <small *ngIf="cacheExist(course.name)">{{cache[cleanFormat(course.name)].title}}</small>
-  <select *ngIf="cacheExist(course.name)" class="form-control" [(ngModel)]="course.section">
+  <small *ngIf="cache[course.name]">{{cache[course.name].title}}</small>
+  <select *ngIf="cache[course.name]" class="form-control" [(ngModel)]="course.section">
     <option *ngFor="let sec of cache[cleanFormat(course.name)].classes" [value]="sec.section">{{sec.section}}-{{sec.instructors|json}}</option>
   </select>
   <label *ngIf="course.section && course.section!='any'"><input type="checkbox" name="enrolled" [(ngModel)]="course.enrolled">Already Enrolled</label>
   <button (click)="remove(i)">Remove</button>
-  <div *ngIf="cache[cleanFormat(course.name)].related.length > 0">
+  <div *ngIf="cache[course.name]?.related.length > 0">
     <p>Related component of {{course.name}}</p>
-    <div *ngFor="let related of cache[cleanFormat(course.name)].related; let j = index">
+    <div *ngFor="let related of cache[course.name].related; let j = index">
       <p>{{related[0].type}}</p>
       <select class="form-control" [(ngModel)]="course.related[j].section">
         <option *ngFor="let sec of related" [value]="sec.section">{{sec.section}}-{{sec?.instructors[0]}}</option>
