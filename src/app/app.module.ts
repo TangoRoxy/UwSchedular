@@ -6,11 +6,13 @@ import { HttpModule } from '@angular/http';
 import { AppComponent } from './app.component';
 import { ScheduleFormComponent } from './schedule-form/schedule-form.component';
 import {CourseInfoService} from "./course-info.service";
+import { ScheduleComponent } from './schedule/schedule.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    ScheduleFormComponent
+    ScheduleFormComponent,
+    ScheduleComponent
   ],
   imports: [
     BrowserModule,

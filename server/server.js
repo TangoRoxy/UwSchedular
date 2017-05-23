@@ -94,7 +94,7 @@ app.get('/do', function (req,res) {
   }
 });
 app.post('/t', function(req,res){
-  //console.log(req.body);
+  console.log(req.body);
   request = req.body.courses.map(x=>x.name.replace(/([0-9]*)$/, "/$1"));
   response = [];
   wait = request.length;
@@ -204,7 +204,7 @@ function filterData4(r, form){
             start_time: clas.date.start_time,
             end_time :clas.date.end_time,
             weekdays : clas.date.weekdays,
-            location : clas.location,
+            location : clas.location ? null : clas.location.building + ' ' + clas.location.room,
             instructors: clas.instructors[0]
           });
 
@@ -232,7 +232,7 @@ function filterData4(r, form){
             start_time: clas.date.start_time,
             end_time :clas.date.end_time,
             weekdays : clas.date.weekdays,
-            location : clas.location,
+            location : clas.location ? null : clas.location.building + ' ' + clas.location.room,
             instructors: clas.instructors[0]
           });
 
@@ -471,22 +471,8 @@ function ifOverlap(a,b){
 // t is in the format "18:30"
 function getMin(t){
   t = t.split(":");
-  return 60* t[0] + t[1];
+  return 60* Number(t[0]) + Number(t[1]);
 }
-
-// instructor
-// already enrolled
-// closed class
-function filter(data, criteria){
-  if (criteria){
-    data.filter(x =>{
-      if (!criteria.showClosed){
-        return x.canEnroll > 0;
-      }
-    })
-  }
-}
-
 
 
 app.listen(80, function () {

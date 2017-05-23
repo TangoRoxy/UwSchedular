@@ -1,31 +1,3 @@
-<p>
-  schedule-form works!
-</p>
-
-
-<!--<div *ngFor="let course of courses; let i = index" class="form-group">-->
-  <!--<label for="courseName">Course Number(i.e Math135)</label>-->
-  <!--<input type="text"  class="form-control" id="courseName"-->
-         <!--[(ngModel)]="course.name" name="courseName" (input)="getCourseInfo($event)">-->
-  <!--<small *ngIf="course.title">{{course.title}}</small>-->
-  <!--<select *ngIf="course.section" class="form-control">-->
-    <!--<option *ngFor="let sec of course.section" [value]="sec.section">{{sec.section}}-{{sec?.instructors[0]}}</option>-->
-  <!--</select>-->
-  <!--<input type="checkbox" name="enrolled">Already Enrolled-->
-  <!--<button (click)="remove(i)">Remove</button>-->
-  <!--<div *ngIf="course.related">-->
-    <!--<p>Related component of {{course.name}}</p>-->
-    <!--<div *ngFor="let related of course.related">-->
-      <!--<p>{{related.name}}</p>-->
-      <!--<select *ngIf="related.section" class="form-control">-->
-        <!--<option *ngFor="let sec of related.section" [value]="related.section">{{sec.section}}-{{sec?.instructors[0]}}</option>-->
-      <!--</select>-->
-      <!--<input type="checkbox" name="enrolled">Already Enrolled-->
-    <!--</div>-->
-  <!--</div>-->
-<!--</div>-->
-
-
 <div *ngFor="let course of courses; let i = index" class="form-group">
   <label for="courseName">Course Number</label>
   <input type="text"  class="form-control" id="courseName"
@@ -57,7 +29,12 @@
 <button type="submit" class="btn btn-success" (click)="submit(form)">Submit</button>
 
 
+<input type="checkbox" [(ngModel)]="debug">
 <div *ngIf="debug">
 {{courses | json}} <br>
- CACHE: {{cache | json}}
+ CACHE: {{cache | json}} <br>
+</div>
+
+<div *ngIf="result.length > 1">
+  <app-schedule *ngFor="let schedule of result[0]" [schedule]="schedule" [detail]="result[1]"></app-schedule>
 </div>
