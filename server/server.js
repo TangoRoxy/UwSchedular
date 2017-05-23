@@ -36,13 +36,14 @@ app.get('/course', function (req,res) {
   // all call waterloo api to get
   let course = req.query.course;
   console.log(course);
-  course = course.replace(/([0-9]*)$/, "/$1");
-  if (course && /^[a-zA-Z]{2,4}\/[0-9]{3}/.test(course)) {
+  path = course.replace(/([0-9]*)$/, "/$1");
+  if (path && /^[a-zA-Z]{2,4}\/[0-9]{3}/.test(path)) {
     console.log("requesting");
-    uwclient.get('/courses/' + course + '/schedule.json', (e, r)=> {
+    uwclient.get('/courses/' + path + '/schedule.json', (e, r)=> {
       let d = [];
-      if (r){
-        d = filterData([r]);
+      r = processData1([r]);
+      if (r.length > 0){
+        d = filterData4(r, {courses:[{name: course}]});
       }
       res.send(d);
     });
@@ -50,27 +51,6 @@ app.get('/course', function (req,res) {
 });
 
 
-
-
-app.get('/do', function (req,res) {
-  // all call waterloo api to get
-  data= ['CS/245', 'CS/246', 'CS/251', 'MATH/239'];
-  response = [];
-  wait = data.length;
-  for (i of data){
-    uwclient.get('/courses/'+ i + '/schedule.json', (e,r)=> {
-      wait--;
-      if (r){
-        response.push(r);
-      }
-
-      if (wait == 0){
-        res.send(makeSchedule(response));
-        //res.send(filterData(response));
-      }
-    });
-  }
-});
 app.post('/t', function(req,res){
   console.log(req.body);
   request = req.body.courses.map(x=>x.name.replace(/([0-9]*)$/, "/$1"));
@@ -125,34 +105,37 @@ app.get('/t', function (req,res) {
   // })
 })  ;
 
-// TODO: filter with weekday, split tutorial out.
-function makeSchedule(data){
-  //
-  // open class only
-  // filter
-  // if possible: send back cleaned send back everything and list of selection i.e [0,0,0,0,0]
-  results  = [];
-  // clean data;
-  // filter data;
-  data = filterData(data);
 
-  addCourse([],0, data, results);
-  return [data, results];
-}
-
-
-
-// filtered out useless stuff;
+// filtered out useless information;
 function processData1(r){
+  console.log(r);
   return r.map(x=>x.data).filter(x=>x.length>0);
 }
 
+
+function reformatApiData(section){
+  let clas = section.classes[0];
+  return {
+    class_nb: section.class_number,
+    section: section.section,
+    canEnrol: section.enrollment_capacity - section.enrollment_total,
+    start_time: clas.date.start_time,
+    end_time :clas.date.end_time,
+    weekdays : clas.date.weekdays,
+    location : clas.location.building ? clas.location.building + ' ' + clas.location.room: null,
+    instructors: clas.instructors[0]
+  };
+}
+
+
+// take an array of response about course schedule;
+// separate tut eliminate tus
 function filterData4(r, form){
-  let show = form.showOpenOnly ? form.showOpenOnly : true;
+  let showOpenOnly = form.showOpenOnly ? form.showOpenOnly : false;
   result = [];
   // loop through form;
-  // console.log(r);
-  // console.log(form);
+  console.log(r);
+  console.log(form);
   for (crit of form.courses){
 
     // find correct data
@@ -171,49 +154,30 @@ function filterData4(r, form){
     classes = [];
     tut = [];
     for (section of info){
-      clas = section.classes[0];
       if (section.section.includes("LEC")){
         if ((!crit.section || crit.section == "any" || crit.section == section.section)
-          && (!form.showOpenOnly || crit.enrolled || section.enrollment_capacity - section.enrollment_total > 0)){
-          classes.push({
-            class_nb: section.class_number,
-            section: section.section,
-            canEnrol: section.enrollment_capacity - section.enrollment_total,
-            start_time: clas.date.start_time,
-            end_time :clas.date.end_time,
-            weekdays : clas.date.weekdays,
-            location : clas.location.building ? clas.location.building + ' ' + clas.location.room: null,
-            instructors: clas.instructors[0]
-          });
-
+          && (!showOpenOnly || crit.enrolled || section.enrollment_capacity - section.enrollment_total > 0)){
+          classes.push(reformatApiData(section));
         }
       } else if (section.section.includes("TUT")){
         // get corresponding related info;
         let r;
-        for (comp of crit.related){
-          // console.log(section.section);
-          // console.log(comp);
-          if (comp.section && comp.section.includes("TUT")){
-            r = comp;
-            break;
+        if (crit.related){
+          for (comp of crit.related){
+            // console.log(section.section);
+            // console.log(comp);
+            if (comp.section && comp.section.includes("TUT")){
+              r = comp;
+              break;
+            }
           }
         }
         if (!r){
           r = {section: "any"};
         }
         if ((!r.section || r.section == "any" || r.section == section.section)
-          && (!form.showOpenOnly || r.enrolled || section.enrollment_capacity - section.enrollment_total > 0)){
-          tut.push({
-            class_nb: section.class_number,
-            section: section.section,
-            canEnrol: section.enrollment_capacity - section.enrollment_total,
-            start_time: clas.date.start_time,
-            end_time :clas.date.end_time,
-            weekdays : clas.date.weekdays,
-            location : clas.location ? null : clas.location.building + ' ' + clas.location.room,
-            instructors: clas.instructors[0]
-          });
-
+          && (!showOpenOnly || r.enrolled || section.enrollment_capacity - section.enrollment_total > 0)){
+          tut.push(reformatApiData(section));
         }
       }
     }
@@ -276,7 +240,7 @@ function addCourse(cur, index, data, results){
 
 
 // TODO: use lambda to make it cooler
-// tested
+// test if there is a common day
 function dayOverlap(a,b){
   if (!a.weekdays || !b.weekdays){
     return false;
@@ -291,63 +255,7 @@ function dayOverlap(a,b){
 }
 
 
-// take an array of response about course schedule;
-// separate tut eliminate tus
-// TODO: handle no data
-function filterData(d){
-  data = [];
-  for (o of d){
-    o = o.data;
-    classes = [];
-    tut = [];
-    for (i of o){
-      a = i.classes[0];
-      if (i.section.includes("LEC")){
-        classes.push({
-          class_nb: i.class_number,
-          section: i.section,
-          canEnrol: i.enrollment_capacity - i.enrollment_total,
-          start_time: a.date.start_time,
-          end_time :a.date.end_time,
-          weekdays : a.date.weekdays,
-          location : a.location,
-          instructors: a.instructors
-        });
-      }
-      if (i.section.includes("TUT")){
-        tut.push({
-          class_nb: i.class_number,
-          section: i.section,
-          canEnrol: i.enrollment_capacity - i.enrollment_total,
-          start_time: a.date.start_time,
-          end_time :a.date.end_time,
-          weekdays : a.date.weekdays,
-          location : a.location, //TODO: concate building and classroom
-          instructors: a.instructors
-        });
-      }
-    }
-    if (o.length > 0) {
-      data.push({
-        name: o[0].subject + o[0].catalog_number,
-        title: o[0].title,
-        type: "LEC",
-        classes: classes
-      });
-      if (tut.length > 0) {
-        data.push({
-          name: o[0].subject + o[0].catalog_number,
-          title: o[0].title,
-          type: "TUT",
-          classes: tut
-        });
-      }
-    }
-  }
-  return data;
-}
-
-// input "18:30"
+// check if two interval overlaps
 function ifOverlap(a,b){
   if (!a.start_time || !b.start_time){
     return false;
@@ -360,6 +268,7 @@ function ifOverlap(a,b){
 }
 
 // t is in the format "18:30"
+// return total number of min
 function getMin(t){
   t = t.split(":");
   return 60* Number(t[0]) + Number(t[1]);

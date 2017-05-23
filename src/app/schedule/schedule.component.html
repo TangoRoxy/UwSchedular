@@ -1,0 +1,52 @@
+<!--<p>-->
+  <!--{{detail|json}} <br>-->
+  <!--{{schedule|json}}-->
+<!--</p>-->
+<h3>Schedule {{no+1}}</h3>
+<div class="container">
+  <div class="row">
+    <div class="col col-lg-8 col-md-6 col-sm-12">
+      <table class="calendar table table-bordered">
+        <thead>
+        <tr>
+          <th>&nbsp;</th>
+          <th width="20%">Monday</th>
+          <th width="20%">Tuesday</th>
+          <th width="20%">Wednesday</th>
+          <th width="20%">Thursday</th>
+          <th width="20%">Friday</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let int of interval">
+          <td>{{int * 50 + 800}}</td>
+          <td *ngFor="let day of weekday" class=" no-events" rowspan="1"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col col-lg-4 col-md-6 col-sm-12">
+      <h5>
+        Legend:
+      </h5>
+      <ul>
+        <li *ngFor="let courses of detail; let i = index" [ngStyle]="{'border-bottom': 'solid '+color[i]}">
+          <p [ngStyle]="{'background-color': color[i], 'width': '3em', 'height': 'auto', 'display': 'inline-block'}">{{i+1}}:</p>
+          {{detail[i].name}}, {{detail[i].title}}
+          <p>{{detail[i].classes[schedule[i]].section}}</p>
+          <p *ngIf="!detail[i].classes[schedule[i]].start_time">Online Section</p>
+          <div *ngIf="detail[i].classes[schedule[i]].start_time">
+            {{detail[i].classes[schedule[i]].start_time}}-
+            {{detail[i].classes[schedule[i]].end_time}}
+            {{detail[i].classes[schedule[i]].weekdays}}
+            <p>Location: {{detail[i].classes[schedule[i]].location}}</p>
+          </div>
+          <p>Instructor: {{detail[i].classes[schedule[i]].instructors}}</p>
+        </li>
+      </ul>
+      <button class="btn" (click)="top()">Back to the top</button>
+    </div>
+  </div>
+</div>
+
+<hr>
