@@ -2,16 +2,6 @@
  * Created by xiyao on 11/19/2016.
  */
 
-// var sql = require('mysql');
-//
-// var config = {
-//   user: 'root',
-//   password: 'tangotango',
-//   server: 'localhost',
-//   port: 3306,
-//   database: 'fh'
-// };
-
 var compression = require('compression');
 var morgan = require('morgan');
 var express = require('express');
@@ -23,23 +13,12 @@ app.use(compression());
 app.use(morgan('common'));
 app.use(bodyParser.json());
 
-// params processing, input checking, default input
-// app.use((req,res,next)=>{
-//     if (!req.query.limit) {
-//       req.query.limit = 8;
-//     } else if (req.query.limit > 100) {
-//       req.query.limit = 100;
-//     }
-//     console.log(req.query);
-//     next();
-//   }
-// );
-
 
 // Testing purpose
 app.get('/', function (req, res) {
   res.send('Hello World!');
 });
+
 
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -65,7 +44,6 @@ app.get('/course', function (req,res) {
       if (r){
         d = filterData([r]);
       }
-
       res.send(d);
     });
   }
@@ -204,7 +182,7 @@ function filterData4(r, form){
             start_time: clas.date.start_time,
             end_time :clas.date.end_time,
             weekdays : clas.date.weekdays,
-            location : clas.location ? null : clas.location.building + ' ' + clas.location.room,
+            location : clas.location.building ? clas.location.building + ' ' + clas.location.room: null,
             instructors: clas.instructors[0]
           });
 
@@ -257,78 +235,10 @@ function filterData4(r, form){
   return result;
 }
 
-//
-// function filterData3(d, form){
-//   data = [];
-//   for (o of d){
-//     o = o.data;
-//     if (o.length <= 0){
-//       continue;
-//     }
-//     classes = [];
-//     tut = [];
-//     for (i of o){
-//       a = i.classes[0];
-//       if (i.section.includes("LEC")){
-//         // get the entry for the form:
-//         // preprocess form: if section == null or any, enrolled = false;
-//         // take care of online sections. start.time = null
-//         let criteria;
-//         let name = o[0].subject + o[0].catalog_number;
-//         for (c of form.courses){
-//
-//         }
-//         let criteria = form.courses[0];
-//         if ((!criteria.section || criteria.section == "any" || criteria.section == i.section)
-//           && (!form.showOpenOnly || criteria.enrolled || i.enrolled > 0)){
-//           classes.push({
-//             class_nb: i.class_number,
-//             section: i.section,
-//             canEnrol: i.enrollment_capacity - i.enrollment_total,
-//             start_time: a.date.start_time,
-//             end_time :a.date.end_time,
-//             weekdays : a.date.weekdays,
-//             location : a.location,
-//             instructors: a.instructors
-//           });
-//         }
-//       }
-//       if (i.section.includes("TUT")){
-//         tut.push({
-//           class_nb: i.class_number,
-//           section: i.section,
-//           canEnrol: i.enrollment_capacity - i.enrollment_total,
-//           start_time: a.date.start_time,
-//           end_time :a.date.end_time,
-//           weekdays : a.date.weekdays,
-//           location : a.location, //TODO: concate building and classroom
-//           instructors: a.instructors
-//         });
-//       }
-//     }
-//
-//     data.push({
-//       name: o[0].subject + o[0].catalog_number,
-//       title: o[0].title,
-//       type: "LEC",
-//       classes: classes
-//     });
-//     if (tut.length > 0) {
-//       data.push({
-//         name: o[0].subject + o[0].catalog_number,
-//         title: o[0].title,
-//         type: "TUT",
-//         classes: tut
-//       });
-//     }
-//
-//   }
-//   return data;
-// }
 
 function addCourse(cur, index, data, results){
   if (index >= data.length){
-    console.log("before push", cur);
+//    console.log("before push", cur);
     results.push(cur);
     return;
   }
@@ -337,15 +247,15 @@ function addCourse(cur, index, data, results){
     let canAdd = true;
     // for each picked courses
     for (j in cur){
-      if (ifOverlap(data[index].classes[i], data[j].classes[cur[j]]) &&
+      if (dayOverlap(data[index].classes[i], data[j].classes[cur[j]]) &&
         ifOverlap(data[index].classes[i], data[j].classes[cur[j]])){
         canAdd = false;
         break;
       }
     }
     if (canAdd) {
-      console.log(i);
-      console.log(cur);
+  //    console.log(i);
+    //  console.log(cur);
       addCourse(cur.concat([i]), index + 1, data, results);
     }
   }
@@ -366,7 +276,11 @@ function addCourse(cur, index, data, results){
 
 
 // TODO: use lambda to make it cooler
+// tested
 function dayOverlap(a,b){
+  if (!a.weekdays || !b.weekdays){
+    return false;
+  }
   a = a.weekdays;
   b = b.weekdays;
   return (a.includes("M") && b.includes("M")) ||
@@ -375,29 +289,6 @@ function dayOverlap(a,b){
     (a.includes("Th") && b.includes("Th")) ||
     (a.includes("T") && !a.includes("Th") && !b.includes("Th") && b.includes("T"));
 }
-
-// function filterData(o){
-//   o = o.data;
-//   classes = [];
-//   for (i of o){
-//     a = i.classes[0];
-//     classes.push({
-//       class_nb: i.class_number,
-//       section: i.section,
-//       canEnrol: i.enrollment_capacity - i.enrollment_total,
-//       start_time: a.date.start_time,
-//       end_time :a.date.end_time,
-//       weekdays : a.date.weekdays,
-//       location : a.location,
-//       instructors: a.instructors
-//     });
-//   }
-//   return {
-//     name: o[0].subject + o[0].catalog_number,
-//     title: o[0].title,
-//     classes: classes
-//   }
-// }
 
 
 // take an array of response about course schedule;
@@ -465,7 +356,7 @@ function ifOverlap(a,b){
   bS = getMin(b.start_time);
   aE = getMin(a.end_time);
   bE = getMin(b.end_time);
-  return (aS < bS && aE > bE) || (aS < bE && aE > bE);
+  return (aS <= bS && aE >= bS) || (aS < bE && aE > bE);
 }
 
 // t is in the format "18:30"

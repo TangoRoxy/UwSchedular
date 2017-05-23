@@ -11,7 +11,7 @@ export class ScheduleFormComponent implements OnInit {
 
 
   debug = true;
-  courses = [];
+  courses : Array<any> = [];
   form = {courses: this.courses, showOpenOnly: true};
   cache = {};
   // MOCK
@@ -28,6 +28,7 @@ export class ScheduleFormComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.addCourse();
   }
 
   getCourseInfo($event){
