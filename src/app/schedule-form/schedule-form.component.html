@@ -12,9 +12,9 @@
         <div class="form-group">
           <label *ngIf="cache[course.name]"> Section</label>
           <select *ngIf="cache[course.name]" class="form-control" [(ngModel)]="course.section">
-            <option *ngFor="let sec of cache[cleanFormat(course.name)].classes" [value]="sec.section">{{sec.section}}-{{sec.instructors|json}}</option>
+            <option *ngFor="let sec of cache[cleanFormat(course.name)].classes" [value]="sec.section">{{sec.section}} {{sec.instructors|json}}</option>
           </select>
-          <label *ngIf="course.section && course.section!='any'"><input type="checkbox" name="enrolled" [(ngModel)]="course.enrolled">Already Enrolled</label>
+          <label *ngIf="course.section && course.section!='Any'"><input type="checkbox" name="enrolled" [(ngModel)]="course.enrolled">Already Enrolled</label>
         </div>
         <div *ngIf="cache[course.name]?.related.length > 0">
           <p>Related component of {{course.name}}</p>
@@ -23,7 +23,7 @@
             <select class="form-control" [(ngModel)]="course.related[j].section">
               <option *ngFor="let sec of related" [value]="sec.section">{{sec.section}}-{{sec?.instructors|json}}</option>
             </select>
-            <label *ngIf="course.related[j].section && course.related[j].section!='any'">
+            <label *ngIf="course.related[j].section && course.related[j].section!='Any'">
               <input type="checkbox" name="enrolled" [(ngModel)]="course.related[j].enrolled">Already Enrolled
             </label>
           </div>
@@ -39,11 +39,11 @@
 
     </div>
   </div>
-  <input type="checkbox" [(ngModel)]="debug">
-  <div *ngIf="debug">
-  {{courses | json}} <br>
-  CACHE: {{cache | json}} <br>
-  </div>
+  <!--<input type="checkbox" [(ngModel)]="debug">-->
+  <!--<div *ngIf="debug">-->
+  <!--{{courses | json}} <br>-->
+  <!--CACHE: {{cache | json}} <br>-->
+  <!--</div>-->
 
   <div *ngIf="result.length>1 && result[0].length > 0">
     Displaying {{result[0].length}} possible schedule(s)

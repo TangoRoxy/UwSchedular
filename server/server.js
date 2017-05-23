@@ -37,7 +37,7 @@ app.get('/course', function (req,res) {
   let course = req.query.course;
   console.log(course);
   path = course.replace(/([0-9]*)$/, "/$1");
-  if (path && /^[a-zA-Z]{2,4}\/[0-9]{3}/.test(path)) {
+  if (path && /^[a-zA-Z]{2,5}\/[0-9]{3}/.test(path)) {
     console.log("requesting");
     uwclient.get('/courses/' + path + '/schedule.json', (e, r)=> {
       let d = [];
@@ -155,7 +155,7 @@ function filterData4(r, form){
     tut = [];
     for (section of info){
       if (section.section.includes("LEC")){
-        if ((!crit.section || crit.section == "any" || crit.section == section.section)
+        if ((!crit.section || crit.section == "Any" || crit.section == section.section)
           && (!showOpenOnly || crit.enrolled || section.enrollment_capacity - section.enrollment_total > 0)){
           classes.push(reformatApiData(section));
         }
@@ -173,9 +173,9 @@ function filterData4(r, form){
           }
         }
         if (!r){
-          r = {section: "any"};
+          r = {section: "Any"};
         }
-        if ((!r.section || r.section == "any" || r.section == section.section)
+        if ((!r.section || r.section == "Any" || r.section == section.section)
           && (!showOpenOnly || r.enrolled || section.enrollment_capacity - section.enrollment_total > 0)){
           tut.push(reformatApiData(section));
         }

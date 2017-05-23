@@ -51,7 +51,7 @@ export class ScheduleComponent implements AfterViewInit {
 
   // Monday is 2,...
   getDate(s){
-    let tests = [/M/, /T[^h]/,/W/, /Th/, /F/];
+    let tests = [/M/, /T[^h]|T$/,/W/, /Th/, /F/];
     let days = [];
     for (let i in tests){
       if (tests[i].test(s)){

@@ -33,7 +33,8 @@
         <li *ngFor="let courses of detail; let i = index" [ngStyle]="{'border-bottom': 'solid '+color[i]}">
           <p [ngStyle]="{'background-color': color[i], 'width': '3em', 'height': 'auto', 'display': 'inline-block'}">{{i+1}}:</p>
           {{detail[i].name}}, {{detail[i].title}}
-          <p>{{detail[i].classes[schedule[i]].section}}</p>
+          <p>Section: {{detail[i].classes[schedule[i]].section}}</p>
+          <p>Class Number: {{detail[i].classes[schedule[i]].class_nb}}</p>
           <p *ngIf="!detail[i].classes[schedule[i]].start_time">Online Section</p>
           <div *ngIf="detail[i].classes[schedule[i]].start_time">
             {{detail[i].classes[schedule[i]].start_time}}-
